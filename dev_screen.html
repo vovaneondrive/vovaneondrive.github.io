@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проект — разработка приложения</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1e1e2e;
+            font-family: 'Consolas', 'Monaco', monospace;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .bar {
+            background: #2a2a3e;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #3a3a5e;
+            user-select: none;
+        }
+        .bar .title {
+            color: #cdd6f4;
+            font-size: 13px;
+            flex: 1;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .red { background: #f38ba8; }
+        .yellow { background: #f9e2af; }
+        .green { background: #a6e3a1; }
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: #2a2a3e;
+            border-bottom: 1px solid #3a3a5e;
+        }
+        .tab {
+            padding: 8px 20px;
+            font-size: 12px;
+            color: #a6adc8;
+            border-right: 1px solid #3a3a5e;
+            background: #252538;
+        }
+        .tab.active {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-top: 2px solid #89b4fa;
+        }
+        .layout {
+            display: flex;
+            height: calc(100vh - 68px);
+        }
+        .code {
+            flex: 2;
+            padding: 16px;
+            overflow-y: auto;
+            background: #1e1e2e;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .code .line { white-space: pre; }
+        .k { color: #cba6f7; }
+        .s { color: #a6e3a1; }
+        .f { color: #89b4fa; }
+        .c { color: #6c7086; font-style: italic; }
+        .n { color: #fab387; }
+        .ln { color: #45475a; display: inline-block; width: 36px; text-align: right; margin-right: 16px; user-select: none; }
+        .side {
+            flex: 1;
+            border-left: 1px solid #3a3a5e;
+            display: flex;
+            flex-direction: column;
+        }
+        .terminal {
+            flex: 1;
+            background: #11111b;
+            padding: 12px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #cdd6f4;
+        }
+        .terminal .prompt { color: #a6e3a1; }
+        .terminal .err { color: #f38ba8; }
+        .terminal .ok { color: #a6e3a1; }
+        .terminal .dim { color: #6c7086; }
+        .status {
+            background: #2a2a3e;
+            padding: 8px 16px;
+            border-top: 1px solid #3a3a5e;
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #a6adc8;
+        }
+        .status .info { color: #89b4fa; }
+        .cursor { display: inline-block; width: 8px; height: 14px; background: #cdd6f4; animation: blink 1s step-end infinite; vertical-align: middle; }
+        @keyframes blink { 50% { opacity: 0; } }
+        #progbar { height: 3px; background: #3a3a5e; width: 100%; }
+        #progfill { height: 100%; width: 0%; background: linear-gradient(90deg, #89b4fa, #a6e3a1); transition: width .5s; }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <div class="title">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span>&nbsp;Неон RC — разработка приложения</span>
+        </div>
+        <div style="color:#89b4fa;font-size:12px">● AI-ассистент подключён</div>
+    </div>
+    <div class="tabs">
+        <div class="tab active">main.dart</div>
+        <div class="tab">bluetooth_service.dart</div>
+        <div class="tab">camera_service.dart</div>
+        <div class="tab">pubspec.yaml</div>
+        <div class="tab" style="color:#f9e2af">▶ Сборка APK...</div>
+    </div>
+    <div id="progbar"><div id="progfill"></div></div>
+    <div class="layout">
+        <div class="code" id="code"></div>
+        <div class="side">
+            <div class="terminal" id="term"></div>
+            <div class="status">
+                <span>🟢 <span class="info" id="status1">сборка проекта</span></span>
+                <span>файлов: <span class="info" id="status2">17</span></span>
+                <span>стадия: <span class="info" id="status3">1/5</span></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const code = [
+            ['k','void '],['f','main'],['n','('],['n',')'],['n',' {'],['',''],
+            ['','  '],['c','// инициализация приложения'],['',''],
+            ['','  '],['k','final'],['',' app = '],['f','NeonRcApp'],['n','();'],['',''],
+            ['','  '],['f','runApp'],['n','(app);'],['',''],
+            ['n','}'],['',''],
+            ['',''],
+            ['k','class'],['',' '],['f','BluetoothService'],['',' {'],['',''],
+            ['','  '],['k','bool'],['',' isConnected = '],['n','false'],['n',';'],['',''],
+            ['','  '],['k','Future'],['n','<'],['k','bool'],['n','> '],['f','connect'],['n','(device) {'],['',''],
+            ['','    '],['c','// подключение к машинке'],['',''],
+            ['','    '],['k','if'],['n','('],['f','device'],['n','.mode == '],['s','"SPP"'],['n',') {'],['',''],
+            ['','      '],['k','return'],['',' '],['f','_connectSpp'],['n','(device);'],['',''],
+            ['','    '],['n','}'],['',''],
+            ['','    '],['k','return'],['',' '],['f','_connectBle'],['n','(device);'],['',''],
+            ['n','  }'],['',''],
+            ['n','}'],['',''],
+        ];
+        const codeEl = document.getElementById('code');
+        const rows = [];
+        code.forEach((c, i) => {
+            const div = document.createElement('div');
+            div.className = 'line';
+            const num = document.createElement('span');
+            num.className = 'ln';
+            num.textContent = i + 1;
+            div.appendChild(num);
+            const span = document.createElement('span');
+            span.className = c[0];
+            span.textContent = c[1];
+            div.appendChild(span);
+            codeEl.appendChild(div);
+            rows.push(div);
+        });
+
+        let visible = 0;
+        const codeTimer = setInterval(() => {
+            if (visible < rows.length) {
+                rows[visible].style.display = 'flex';
+                visible++;
+            } else {
+                clearInterval(codeTimer);
+            }
+        }, 120);
+
+        const term = document.getElementById('term');
+        const lines = [
+            { t: 'ПРОМПТ', text: '$ ' },
+            { t: 'CMD', text: 'flutter build apk --release' },
+            { t: 'DIM', text: 'Загружаю зависимости...' },
+            { t: 'OK', text: '✓ пакет flutter_blue_plus [1.31.5]' },
+            { t: 'OK', text: '✓ пакет flutter_bluetooth_serial [0.4.0]' },
+            { t: 'OK', text: '✓ пакет permission_handler [11.3.0]' },
+            { t: 'OK', text: '✓ пакет camera_service [локально]' },
+            { t: 'DIM', text: 'Компилирую Dart-код...' },
+            { t: 'OK', text: '✓ анализ кода: 0 ошибок' },
+            { t: 'DIM', text: 'Генерирую Android-артефакты...' },
+            { t: 'OK', text: '✓ Gradle: dependencies resolved' },
+            { t: 'OK', text: '✓ Упаковка ресурсов' },
+            { t: 'DIM', text: 'Подписываю APK...' },
+            { t: 'OK', text: '✓ build/app/outputs/flutter-apk/app-release.apk' },
+            { t: 'DIM', text: '— размер: 24.7 MB' },
+            { t: 'OK', text: '✓ ГОТОВО. APK собран успешно' },
+        ];
+        let li = 0;
+        const termTimer = setInterval(() => {
+            if (li < lines.length) {
+                const div = document.createElement('div');
+                const t = lines[li].t;
+                const cls = t === 'OK' ? 'ok' : (t === 'ERR' ? 'err' : (t === 'DIM' ? 'dim' : 'prompt'));
+                div.className = cls;
+                div.textContent = lines[li].text;
+                term.appendChild(div);
+                term.scrollTop = term.scrollHeight;
+                li++;
+            } else {
+                clearInterval(termTimer);
+            }
+        }, 700);
+
+        const stages = ['1/5 инициализация', '2/5 загрузка пакетов', '3/5 компиляция', '4/5 упаковка', '5/5 подпись APK'];
+        let s = 0;
+        const prog = document.getElementById('progfill');
+        const status3 = document.getElementById('status3');
+        setInterval(() => {
+            s++;
+            if (s < 5) {
+                prog.style.width = (s * 20) + '%';
+                status3.textContent = stages[s];
+            }
+        }, 3500);
+    </script>
+</body>
+</html>

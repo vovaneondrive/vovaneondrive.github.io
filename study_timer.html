@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таймер учёбы</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f5f7fb 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #1a1a2e;
+        }
+        .app {
+            width: 700px;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(26,26,46,0.15);
+            padding: 40px;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            font-size: 20px;
+            color: #3a3a5e;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #8a8aa5;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        .timer-circle {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            background: conic-gradient(#4c6ef5 var(--progress, 0%), #e3e8f5 0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .timer-circle::before {
+            content: '';
+            position: absolute;
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        .timer-text {
+            position: relative;
+            z-index: 1;
+            font-size: 48px;
+            font-weight: 700;
+            color: #2a2a4a;
+        }
+        .timer-mode {
+            text-align: center;
+            color: #4c6ef5;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-primary { background: #4c6ef5; color: #fff; }
+        .btn-primary:hover { background: #3b5bdb; }
+        .btn-secondary { background: #e3e8f5; color: #3a3a5e; }
+        .btn-secondary:hover { background: #d3d9ee; }
+        .tasks { border-top: 1px solid #e8ecf8; padding-top: 24px; }
+        .tasks h2 {
+            font-size: 14px;
+            color: #5a5a7e;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .task {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f5f7fb;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .task:hover { background: #edf1fa; }
+        .task input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4c6ef5;
+            cursor: pointer;
+        }
+        .task span { font-size: 14px; color: #3a3a5e; flex: 1; }
+        .task.done span { text-decoration: line-through; color: #a0a0bd; }
+        .task .time { font-size: 11px; color: #9a9ab5; }
+        .add-task {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .add-task input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #e3e8f5;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        .add-task input:focus { border-color: #4c6ef5; }
+        .add-task button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #4c6ef5;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e8ecf8;
+            text-align: center;
+        }
+        .stat .num { font-size: 22px; font-weight: 700; color: #4c6ef5; }
+        .stat .lbl { font-size: 11px; color: #9a9ab5; margin-top: 2px; }
+        .today {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            font-size: 12px;
+            color: #8a8aa5;
+        }
+        .hide-btn {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: #ffffffcc;
+            color: #3a3a5e;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            opacity: 0.6;
+        }
+        .hide-btn:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="today" id="date"></div>
+        <h1>📚 УЧЁБА / РАБОТА</h1>
+        <p class="subtitle">Таймер продуктивности — фокусируйся по 25 минут</p>
+
+        <div class="timer-mode" id="mode">ФОКУС</div>
+        <div class="timer-circle" id="circle">
+            <div class="timer-text" id="time">25:00</div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" id="start-btn">СТАРТ</button>
+            <button class="btn btn-secondary" id="reset-btn">СБРОС</button>
+        </div>
+
+        <div class="tasks">
+            <h2>ЗАДАЧИ НА СЕГОДНЯ</h2>
+            <div id="task-list"></div>
+            <div class="add-task">
+                <input type="text" id="new-task" placeholder="Добавить задачу...">
+                <button id="add-btn">+</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><div class="num" id="pomos">0</div><div class="lbl">Помидоров</div></div>
+            <div class="stat"><div class="num" id="mins">0</div><div class="lbl">Минут сфокусировано</div></div>
+            <div class="stat"><div class="num" id="tasks-done">0</div><div class="lbl">Задач выполнено</div></div>
+        </div>
+    </div>
+
+    <button class="hide-btn" id="hide-btn" title="Свернуть">—</button>
+
+    <script>
+        const dateEl = document.getElementById('date');
+        dateEl.textContent = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+
+        let total = 25 * 60;
+        let left = total;
+        let running = false;
+        let interval = null;
+        let pomos = 0;
+        let focusedMin = 0;
+
+        const timeEl = document.getElementById('time');
+        const modeEl = document.getElementById('mode');
+        const circle = document.getElementById('circle');
+        const startBtn = document.getElementById('start-btn');
+
+        function render() {
+            const m = Math.floor(left / 60);
+            const s = left % 60;
+            timeEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            circle.style.setProperty('--progress', `${(1 - left / total) * 360}deg`);
+        }
+
+        function tick() {
+            if (left <= 0) {
+                clearInterval(interval);
+                running = false;
+                startBtn.textContent = 'СТАРТ';
+                pomos++;
+                focusedMin += 25;
+                document.getElementById('pomos').textContent = pomos;
+                document.getElementById('mins').textContent = focusedMin;
+                left = total;
+                render();
+                return;
+            }
+            left--;
+            render();
+        }
+
+        startBtn.addEventListener('click', () => {
+            running = !running;
+            startBtn.textContent = running ? 'ПАУЗА' : 'СТАРТ';
+            if (running) {
+                interval = setInterval(tick, 1000);
+            } else {
+                clearInterval(interval);
+            }
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            clearInterval(interval);
+            running = false;
+            startBtn.textContent = 'СТАРТ';
+            left = total;
+            render();
+        });
+
+        // Tasks
+        const tasks = [
+            { text: 'Сделать домашнее задание', done: false },
+            { text: 'Повторить конспект', done: false },
+            { text: 'Прочитать параграф', done: false },
+        ];
+        const listEl = document.getElementById('task-list');
+
+        function renderTasks() {
+            listEl.innerHTML = '';
+            let doneCount = 0;
+            tasks.forEach((t, i) => {
+                if (t.done) doneCount++;
+                const div = document.createElement('div');
+                div.className = 'task' + (t.done ? ' done' : '');
+                div.innerHTML = `
+                    <input type="checkbox" ${t.done ? 'checked' : ''}>
+                    <span>${t.text}</span>
+                    <span class="time">${t.done ? '✅' : ''}</span>`;
+                div.querySelector('input').addEventListener('change', (e) => {
+                    t.done = e.target.checked;
+                    renderTasks();
+                });
+                listEl.appendChild(div);
+            });
+            document.getElementById('tasks-done').textContent = doneCount;
+        }
+        renderTasks();
+
+        document.getElementById('add-btn').addEventListener('click', () => {
+            const input = document.getElementById('new-task');
+            if (input.value.trim()) {
+                tasks.push({ text: input.value.trim(), done: false });
+                input.value = '';
+                renderTasks();
+            }
+        });
+
+        document.getElementById('hide-btn').addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        });
+
+        render();
+    </script>
+</body>
+</html>

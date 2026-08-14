@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON DRIVE — Скачать приложение для управления машинкой</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon: #00E5FF;
+            --neon2: #FFC400;
+            --bg: #0a0a0f;
+            --card: #12121a;
+            --red: #ff0044;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg);
+            color: #fff;
+            overflow-x: hidden;
+        }
+        canvas#bg {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .wrap { position: relative; z-index: 1; }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 40px;
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,229,255,0.15);
+            z-index: 100;
+        }
+        .logo {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--neon);
+            text-shadow: 0 0 15px var(--neon);
+            letter-spacing: 3px;
+        }
+        .nav-links a {
+            color: #aaa;
+            text-decoration: none;
+            margin-left: 28px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            transition: color .3s;
+        }
+        .nav-links a:hover { color: var(--neon); }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .hero h1 {
+            font-size: clamp(40px, 8vw, 96px);
+            font-weight: 900;
+            color: var(--neon);
+            text-shadow: 0 0 30px var(--neon), 0 0 60px var(--neon), 0 0 90px var(--neon);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; }
+            50% { opacity: .75; }
+        }
+        .hero .subtitle {
+            margin-top: 20px;
+            font-size: clamp(14px, 2vw, 20px);
+            color: #bbb;
+            line-height: 1.8;
+            max-width: 700px;
+        }
+        .hero .badges {
+            margin-top: 30px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .badge {
+            padding: 10px 20px;
+            border: 1px solid var(--neon);
+            border-radius: 8px;
+            color: var(--neon);
+            font-size: 12px;
+            letter-spacing: 2px;
+            background: rgba(0,229,255,0.05);
+        }
+
+        /* DOWNLOAD BUTTONS */
+        .download-section {
+            padding: 80px 20px;
+            text-align: center;
+        }
+        .section-title {
+            font-size: 32px;
+            color: var(--neon);
+            text-shadow: 0 0 15px var(--neon);
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+        }
+        .section-sub { color: #888; margin-bottom: 50px; font-size: 13px; letter-spacing: 1px; }
+        .download-cards {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .d-card {
+            background: var(--card);
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 16px;
+            padding: 40px 30px;
+            width: 320px;
+            position: relative;
+            transition: transform .3s, box-shadow .3s;
+        }
+        .d-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 40px rgba(0,229,255,0.15);
+        }
+        .d-card .icon { font-size: 56px; margin-bottom: 20px; }
+        .d-card h3 { font-size: 18px; letter-spacing: 2px; margin-bottom: 8px; }
+        .d-card .os { color: var(--neon2); font-size: 12px; letter-spacing: 2px; margin-bottom: 16px; }
+        .d-card p { color: #999; font-size: 12px; line-height: 1.7; margin-bottom: 24px; min-height: 60px; }
+        .btn {
+            display: inline-block;
+            padding: 14px 40px;
+            border: 2px solid var(--neon);
+            color: var(--neon);
+            text-decoration: none;
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .3s;
+            background: transparent;
+            font-family: inherit;
+        }
+        .btn:hover { background: var(--neon); color: #0a0a0f; box-shadow: 0 0 30px var(--neon); }
+        .btn-red { border-color: var(--red); color: var(--red); }
+        .btn-red:hover { background: var(--red); color: #fff; box-shadow: 0 0 30px var(--red); }
+        .btn-soon { border-color: #444; color: #666; pointer-events: none; }
+        .version-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--neon);
+            color: #000;
+            padding: 4px 16px;
+            font-size: 10px;
+            font-weight: 900;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
+        .version-tag.latest { background: var(--neon2); }
+
+        /* INSTALL GUIDE */
+        .guide {
+            padding: 80px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .step {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+        .step-num {
+            min-width: 48px;
+            height: 48px;
+            border: 2px solid var(--neon);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: var(--neon);
+            box-shadow: 0 0 15px rgba(0,229,255,0.3);
+        }
+        .step h4 { font-size: 15px; letter-spacing: 1px; margin-bottom: 6px; color: var(--neon); }
+        .step p { color: #999; font-size: 13px; line-height: 1.8; }
+
+        /* HARDWARE */
+        .hardware {
+            padding: 80px 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(0,229,255,0.15);
+        }
+        th {
+            background: rgba(0,229,255,0.1);
+            color: var(--neon);
+            padding: 16px;
+            text-align: left;
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+        td {
+            padding: 16px;
+            color: #bbb;
+            font-size: 13px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .rec {
+            color: var(--neon2);
+            font-weight: 700;
+        }
+
+        /* FAQ */
+        .faq { max-width: 900px; margin: 0 auto; padding: 80px 20px; }
+        .faq-item {
+            background: var(--card);
+            border: 1px solid rgba(0,229,255,0.15);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .faq-q {
+            padding: 18px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--neon);
+            letter-spacing: 1px;
+        }
+        .faq-a {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .4s;
+            color: #999;
+            font-size: 13px;
+            line-height: 1.8;
+            padding: 0 24px;
+        }
+        .faq-item.open .faq-a { max-height: 300px; padding-bottom: 18px; }
+        .faq-item.open .faq-q { border-bottom: 1px solid rgba(0,229,255,0.15); }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-size: 11px;
+            letter-spacing: 2px;
+            border-top: 1px solid rgba(0,229,255,0.1);
+        }
+        footer .neon { color: var(--neon); }
+
+        /* Upload box */
+        .upload-hint {
+            margin-top: 30px;
+            color: #666;
+            font-size: 11px;
+        }
+        /* Platform tabs */
+        .tab-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 45px;
+        }
+        .tab-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .tab-btn {
+            padding: 13px 26px;
+            border: 1px solid rgba(0,229,255,0.3);
+            background: transparent;
+            color: #999;
+            font-family: inherit;
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .3s;
+        }
+        .tab-btn:hover { color: var(--neon); border-color: var(--neon); }
+        .tab-btn.active {
+            background: var(--neon);
+            color: #0a0a0f;
+            border-color: var(--neon);
+            box-shadow: 0 0 20px rgba(0,229,255,0.4);
+        }
+        .tab-arrow {
+            background: transparent;
+            border: 1px solid rgba(0,229,255,0.3);
+            color: var(--neon);
+            font-size: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all .3s;
+            flex-shrink: 0;
+        }
+        .tab-arrow:hover { background: rgba(0,229,255,0.1); box-shadow: 0 0 15px rgba(0,229,255,0.3); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn .3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        @media (max-width: 600px) {
+            nav { padding: 14px 20px; }
+            .nav-links a { margin-left: 14px; font-size: 10px; }
+            .d-card { width: 100%; max-width: 340px; }
+        }
+        /* Dev console */
+        .dev-btn {
+            background: transparent;
+            border: 1px solid rgba(0,229,255,0.25);
+            color: #777;
+            font-family: inherit;
+            font-size: 10px;
+            letter-spacing: 2px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all .3s;
+        }
+        .dev-btn:hover { color: var(--neon); border-color: var(--neon); }
+        .modal-mask {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5,5,10,0.85);
+            backdrop-filter: blur(6px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-mask.show { display: flex; }
+        .modal {
+            background: #0e0e16;
+            border: 1px solid rgba(0,229,255,0.3);
+            border-radius: 14px;
+            padding: 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 0 40px rgba(0,229,255,0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-wide { max-width: 560px; }
+        .modal h3 { color: var(--neon); letter-spacing: 3px; font-size: 16px; text-shadow: 0 0 12px var(--neon); margin-bottom: 6px; }
+        .modal-sub { color: #888; font-size: 11px; letter-spacing: 1px; margin-bottom: 20px; line-height: 1.7; }
+        .dev-input {
+            width: 100%;
+            background: #16161f;
+            border: 1px solid rgba(0,229,255,0.25);
+            border-radius: 8px;
+            color: #eee;
+            font-family: inherit;
+            font-size: 13px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            outline: none;
+            transition: border .3s;
+            box-sizing: border-box;
+        }
+        .dev-input:focus { border-color: var(--neon); }
+        .dev-label { display: block; color: #aaa; font-size: 10px; letter-spacing: 2px; margin-bottom: 6px; }
+        .dev-colors { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+        .dev-colors > div { flex: 1; min-width: 100px; }
+        .dev-color {
+            width: 100%;
+            height: 42px;
+            background: #16161f;
+            border: 1px solid rgba(0,229,255,0.25);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .modal-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+        .modal-btns .btn { flex: 1; padding: 12px 10px; font-size: 12px; min-width: 110px; }
+        .modal-err { color: var(--red); font-size: 11px; min-height: 16px; margin: 4px 0 8px; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="wrap">
+    <nav>
+        <div class="logo">NEON DRIVE</div>
+        <div class="nav-links">
+            <a href="#download">СКАЧАТЬ</a>
+            <a href="#guide">УСТАНОВКА</a>
+            <a href="#hardware">ЖЕЛЕЗО</a>
+            <a href="#faq">FAQ</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>NEON DRIVE</h1>
+        <p class="subtitle">
+            Бесплатное приложение для управления радиоуправляемой машинкой
+            по Bluetooth с FPV-камерой. Работает на Android, Windows и Linux.
+        </p>
+        <div class="badges">
+            <span class="badge">BLUETOOTH SPP + BLE</span>
+            <span class="badge">FPV КАМЕРА</span>
+            <span class="badge">СЕНСОРНОЕ УПРАВЛЕНИЕ</span>
+            <span class="badge">БЕСПЛАТНО</span>
+        </div>
+    </header>
+
+    <section id="download" class="download-section">
+        <h2 class="section-title">СКАЧАТЬ</h2>
+        <p class="section-sub">ВЫБЕРИ ПЛАТФОРМУ</p>
+
+        <div class="download-cards">
+            <div class="d-card">
+                <span class="version-tag latest">v1.0.0</span>
+                <div class="icon">🤖</div>
+                <h3>ANDROID</h3>
+                <div class="os">APK файл</div>
+                <p>Для телефона. Установка напрямую (с включённым "Неизвестные источники"). Все функции приложения.</p>
+                <a class="btn" id="apk-btn" href="#" onclick="downloadApk(event)">Скачать APK</a>
+                <p class="upload-hint" id="apk-hint">APK не найден — положи файл в папку downloads/</p>
+            </div>
+
+            <div class="d-card">
+                <span class="version-tag">Windows</span>
+                <div class="icon">🖥️</div>
+                <h3>WINDOWS</h3>
+                <div class="os">.exe</div>
+                <p>Приложение для ПК. Управление с клавиатуры или геймпада + камера с машинки в окне.</p>
+                <a class="btn btn-soon" href="#">Скоро</a>
+            </div>
+
+            <div class="d-card">
+                <span class="version-tag">Linux</span>
+                <div class="icon">🐧</div>
+                <h3>LINUX</h3>
+                <div class="os">AppImage / .deb</div>
+                <p>Для Ubuntu, Debian и других дистрибутивов. Собирается из исходников Flutter.</p>
+                <a class="btn btn-soon" href="#">Скоро</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="guide" class="guide">
+        <h2 class="section-title" style="text-align:center;">УСТАНОВКА</h2>
+        <p class="section-sub" style="text-align:center;">3 шага — и машинка поехала. Переключай стрелочками:</p>
+
+        <div class="tab-bar">
+            <button class="tab-arrow" id="tab-prev" title="Назад">◀</button>
+            <div class="tab-btns">
+                <button class="tab-btn active" data-tab="android">ANDROID</button>
+                <button class="tab-btn" data-tab="windows">WINDOWS</button>
+                <button class="tab-btn" data-tab="linux">LINUX</button>
+            </div>
+            <button class="tab-arrow" id="tab-next" title="Вперёд">▶</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="android">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div>
+                    <h4>Скачай APK</h4>
+                    <p>Нажми кнопку "Скачать APK" выше. Файл сохранится в папку "Загрузки" на телефоне.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div>
+                    <h4>Разреши установку</h4>
+                    <p>Android попросит разрешение на установку из неизвестных источников — нажми "Разрешить". Это нормально: приложение не из Google Play.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div>
+                    <h4>Подключись к машинке</h4>
+                    <p>Открой NEON DRIVE → включи Bluetooth на машинке → нажми "Сканировать" → выбери устройство (HC-05/06 или ESP32) → играй.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" data-panel="windows">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div>
+                    <h4>Скачай .exe</h4>
+                    <p>Нажми кнопку "Скачать" для Windows в разделе выше. Файл появится в папке "Загрузки".</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div>
+                    <h4>Запусти и разреши</h4>
+                    <p>Windows спросит "Защитить этот ПК?" — нажми "Подробнее" → "Выполнить в любом случае". Это наше приложение, вируса в нём нет.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div>
+                    <h4>Подключись к машинке</h4>
+                    <p>Включи Bluetooth на машинке и на ПК → нажми "Сканировать" → выбери устройство (HC-05/06 или ESP32) → управляй с клавиатуры или геймпада.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" data-panel="linux">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div>
+                    <h4>Скачай AppImage</h4>
+                    <p>Нажми кнопку "Скачать" для Linux в разделе выше. Файл скачается в папку "Загрузки".</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div>
+                    <h4>Сделай исполняемым</h4>
+                    <p>Открой терминал в папке с файлом и выполни: chmod +x neon_drive.AppImage</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div>
+                    <h4>Подключись к машинке</h4>
+                    <p>Запусти приложение → включи Bluetooth на машинке → нажми "Сканировать" → выбери устройство (HC-05/06 или ESP32) → играй.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="hardware" class="hardware">
+        <h2 class="section-title" style="text-align:center;">РЕКОМЕНДУЕМОЕ ЖЕЛЕЗО</h2>
+        <p class="section-sub" style="text-align:center;">Бюджетный набор для сборки машинки</p>
+
+        <table>
+            <tr>
+                <th>Компонент</th>
+                <th>Модель</th>
+                <th>Цена</th>
+                <th>Зачем</th>
+            </tr>
+            <tr>
+                <td class="rec">Камера + Bluetooth ★</td>
+                <td>ESP32-CAM (AI-Thinker, OV2640)</td>
+                <td>600–800 ₽</td>
+                <td>Видео MJPEG + BLE в одном модуле</td>
+            </tr>
+            <tr>
+                <td>Bluetooth</td>
+                <td>HC-05</td>
+                <td>150–300 ₽</td>
+                <td>Классический SPP для Arduino</td>
+            </tr>
+            <tr>
+                <td>Bluetooth (дёшево)</td>
+                <td>HC-06</td>
+                <td>100–250 ₽</td>
+                <td>Только приём команд (slave)</td>
+            </tr>
+            <tr>
+                <td>Драйвер моторов</td>
+                <td>L298N</td>
+                <td>150–300 ₽</td>
+                <td>Управление моторами машинки</td>
+            </tr>
+            <tr>
+                <td>Серво руля</td>
+                <td>MG90S / SG90</td>
+                <td>150–400 ₽</td>
+                <td>Поворот передних колёс</td>
+            </tr>
+            <tr>
+                <td>Питание</td>
+                <td>LiPo 7.4V 1500mAh</td>
+                <td>300–600 ₽</td>
+                <td>Питает моторы и ESP32</td>
+            </tr>
+        </table>
+    </section>
+
+    <section id="faq" class="faq">
+        <h2 class="section-title" style="text-align:center;">ВОПРОСЫ</h2>
+        <div class="faq-item">
+            <div class="faq-q">Почему приложения нет в Google Play? <span>+</span></div>
+            <div class="faq-a">Приложение можно установить только с этого сайта. Это бесплатно и без регистрации. Для Google Play нужна публикация через аккаунт разработчика — можно сделать позже.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q">Мой модуль HC-06 — подключится? <span>+</span></div>
+            <div class="faq-a">Да. Приложение поддерживает оба типа Bluetooth: классический SPP (HC-05/HC-06) и BLE (ESP32). Тип определяется автоматически при сканировании.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q">Как транслировать видео с камеры? <span>+</span></div>
+            <div class="faq-a">В настройках приложения укажи адрес камеры. Для ESP32-CAM по умолчанию: http://192.168.4.1:81/stream. Нажми иконку камеры на главном экране — увидишь видео прямо в приложении.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q">Приложение на Windows — как запустить? <span>+</span></div>
+            <div class="faq-a">Сейчас Windows-версия собирается из исходников через Flutter. Готовая сборка появится на этой странице позже — следи за обновлениями.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q">Это бесплатно? <span>+</span></div>
+            <div class="faq-a">Да, полностью бесплатно и без рекламы.</div>
+        </div>
+    </section>
+
+    <footer>
+        <span class="neon">NEON DRIVE</span> • бесплатное приложение для управления RC-машинкой • © 2026 by Владимир Попов
+        <br><br>
+        <button class="dev-btn" onclick="openDev()">⚙ Консоль разработчика</button>
+    </footer>
+</div>
+
+<div class="modal-mask" id="pass-mask">
+    <div class="modal">
+        <h3>КОНСОЛЬ РАЗРАБОТЧИКА</h3>
+        <p class="modal-sub">Введи пароль, чтобы открыть панель</p>
+        <input type="password" id="dev-pass" class="dev-input" placeholder="Пароль" onkeydown="if(event.key==='Enter')tryDevPass()">
+        <p class="modal-err" id="pass-err"></p>
+        <div class="modal-btns">
+            <button class="btn" onclick="tryDevPass()">Войти</button>
+            <button class="btn btn-red" onclick="closeDev()">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-mask" id="dev-mask">
+    <div class="modal modal-wide">
+        <h3>КОНСОЛЬ РАЗРАБОТЧИКА</h3>
+        <p class="modal-sub">Изменения сохраняются на этом устройстве (онлайн-сохранение будет позже)</p>
+
+        <label class="dev-label">Название (логотип и заголовок)</label>
+        <input type="text" id="cfg-name" class="dev-input" placeholder="NEON DRIVE">
+
+        <label class="dev-label">Подзаголовок на главной</label>
+        <textarea id="cfg-subtitle" class="dev-input" rows="3" placeholder="Описание приложения"></textarea>
+
+        <label class="dev-label">Текст внизу (footer)</label>
+        <input type="text" id="cfg-footer" class="dev-input" placeholder="NEON DRIVE • приложение...">
+
+        <div class="dev-colors">
+            <div>
+                <label class="dev-label">Неоновый цвет</label>
+                <input type="color" id="cfg-neon" class="dev-color" value="#00E5FF">
+            </div>
+            <div>
+                <label class="dev-label">Второй цвет</label>
+                <input type="color" id="cfg-neon2" class="dev-color" value="#FFC400">
+            </div>
+            <div>
+                <label class="dev-label">Цвет фона</label>
+                <input type="color" id="cfg-bg" class="dev-color" value="#0a0a0f">
+            </div>
+        </div>
+
+        <p class="modal-err" id="dev-msg"></p>
+        <div class="modal-btns">
+            <button class="btn" onclick="showCfg()">Показать</button>
+            <button class="btn" onclick="saveCfg()">Сохранить</button>
+            <button class="btn btn-red" onclick="resetCfg()">Сбросить</button>
+            <button class="btn" onclick="closeDev()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // FAQ toggle
+    document.querySelectorAll('.faq-q').forEach(q => {
+        q.addEventListener('click', () => {
+            q.parentElement.classList.toggle('open');
+            const plus = q.querySelector('span');
+            if (plus) plus.textContent = q.parentElement.classList.contains('open') ? '−' : '+';
+        });
+    });
+
+    // Platform tabs
+    const order = ['android', 'windows', 'linux'];
+    function showTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === name));
+    }
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.addEventListener('click', () => showTab(b.dataset.tab));
+    });
+    function shiftTab(dir) {
+        const cur = order.indexOf(document.querySelector('.tab-btn.active').dataset.tab);
+        showTab(order[(cur + dir + order.length) % order.length]);
+    }
+    document.getElementById('tab-prev').addEventListener('click', () => shiftTab(-1));
+    document.getElementById('tab-next').addEventListener('click', () => shiftTab(1));
+
+    // Download button
+    function downloadApk(e) {
+        e.preventDefault();
+        const btn = document.getElementById('apk-btn');
+        btn.textContent = 'Проверка...';
+        fetch('downloads/neon_drive.apk', { method: 'HEAD' })
+            .then(r => {
+                if (r.ok) {
+                    window.location.href = 'downloads/neon_drive.apk';
+                    btn.textContent = 'Скачать APK';
+                } else {
+                    btn.textContent = 'Скачать APK';
+                    document.getElementById('apk-hint').style.color = '#ff0044';
+                    document.getElementById('apk-hint').textContent =
+                        'APK ещё не загружен. Собери его командой: flutter build apk --release';
+                }
+            })
+            .catch(() => {
+                btn.textContent = 'Скачать APK';
+                document.getElementById('apk-hint').style.color = '#ff0044';
+                document.getElementById('apk-hint').textContent =
+                    'APK ещё не загружен. Собери его командой: flutter build apk --release';
+            });
+    }
+
+    // Background animation
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    function resize() { w = canvas.width = innerWidth; h = canvas.height = innerHeight; }
+    resize();
+    addEventListener('resize', resize);
+
+    const dots = Array.from({ length: 60 }, () => ({
+        x: Math.random(), y: Math.random(),
+        vx: (Math.random() - 0.5) * 0.001,
+        vy: (Math.random() - 0.5) * 0.001,
+        r: Math.random() * 2 + 0.5,
+        hue: Math.random() > 0.5 ? 180 : 45,
+    }));
+
+    function frame() {
+        ctx.clearRect(0, 0, w, h);
+        dots.forEach(d => {
+            d.x += d.vx;
+            d.y += d.vy;
+            if (d.x < 0 || d.x > 1) d.vx *= -1;
+            if (d.y < 0 || d.y > 1) d.vy *= -1;
+            ctx.beginPath();
+            ctx.arc(d.x * w, d.y * h, d.r, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(${d.hue},100%,60%,0.7)`;
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+        // links
+        for (let i = 0; i < dots.length; i++) {
+            for (let j = i + 1; j < dots.length; j++) {
+                const dx = (dots[i].x - dots[j].x) * w;
+                const dy = (dots[i].y - dots[j].y) * h;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 140) {
+                    ctx.strokeStyle = `rgba(0,229,255,${0.25 * (1 - dist/140)})`;
+                    ctx.lineWidth = 0.6;
+                    ctx.beginPath();
+                    ctx.moveTo(dots[i].x*w, dots[i].y*h);
+                    ctx.lineTo(dots[j].x*w, dots[j].y*h);
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(frame);
+    }
+    frame();
+
+    // ===== Dev console =====
+    const DEV_PASS = 'vova2015';
+    const CFG_KEY = 'neon_drive_cfg';
+    const DEFAULT_CFG = {
+        name: 'NEON DRIVE',
+        subtitle: 'Бесплатное приложение для управления радиоуправляемой машинкой по Bluetooth с FPV-камерой. Работает на Android, Windows и Linux.',
+        footer: 'NEON DRIVE • бесплатное приложение для управления RC-машинкой • © 2026 by Владимир Попов',
+        neon: '#00E5FF',
+        neon2: '#FFC400',
+        bg: '#0a0a0f'
+    };
+
+    function openDev() {
+        document.getElementById('pass-err').textContent = '';
+        document.getElementById('dev-pass').value = '';
+        document.getElementById('pass-mask').classList.add('show');
+        setTimeout(() => document.getElementById('dev-pass').focus(), 50);
+    }
+    function closeDev() {
+        document.getElementById('pass-mask').classList.remove('show');
+        document.getElementById('dev-mask').classList.remove('show');
+    }
+    function tryDevPass() {
+        if (document.getElementById('dev-pass').value === DEV_PASS) {
+            document.getElementById('pass-mask').classList.remove('show');
+            openPanel();
+        } else {
+            document.getElementById('pass-err').textContent = 'Неверный пароль';
+        }
+    }
+    function openPanel() {
+        const c = loadCfg();
+        document.getElementById('cfg-name').value = c.name;
+        document.getElementById('cfg-subtitle').value = c.subtitle;
+        document.getElementById('cfg-footer').value = c.footer;
+        document.getElementById('cfg-neon').value = c.neon;
+        document.getElementById('cfg-neon2').value = c.neon2;
+        document.getElementById('cfg-bg').value = c.bg;
+        document.getElementById('dev-msg').textContent = '';
+        document.getElementById('dev-mask').classList.add('show');
+    }
+    function readPanel() {
+        return {
+            name: document.getElementById('cfg-name').value.trim(),
+            subtitle: document.getElementById('cfg-subtitle').value.trim(),
+            footer: document.getElementById('cfg-footer').value.trim(),
+            neon: document.getElementById('cfg-neon').value,
+            neon2: document.getElementById('cfg-neon2').value,
+            bg: document.getElementById('cfg-bg').value
+        };
+    }
+    function applyCfg(c) {
+        const root = document.documentElement.style;
+        root.setProperty('--neon', c.neon);
+        root.setProperty('--neon2', c.neon2);
+        root.setProperty('--bg', c.bg);
+        document.querySelectorAll('.logo').forEach(el => el.textContent = c.name);
+        document.querySelectorAll('.hero h1').forEach(el => el.textContent = c.name);
+        const st = document.querySelector('.hero .subtitle');
+        if (st) st.textContent = c.subtitle;
+        const ne = document.querySelector('footer .neon');
+        const ft = document.querySelector('footer');
+        if (ne) ne.textContent = c.name;
+        if (ft) {
+            const sep = c.footer.indexOf(' • ');
+            const rest = sep >= 0 ? c.footer.slice(sep) : c.footer;
+            const parts = ft.childNodes;
+            let found = false;
+            parts.forEach(n => {
+                if (n.nodeType === 3 && n.textContent.includes('бесплатное приложение')) {
+                    n.textContent = rest;
+                    found = true;
+                }
+            });
+            if (!found) {
+                const cbtn = document.querySelector('.dev-btn');
+                const tn = document.createTextNode(rest);
+                if (cbtn && cbtn.previousSibling) ft.insertBefore(tn, cbtn.previousSibling);
+            }
+        }
+        document.title = c.name + ' — Скачать приложение для управления машинкой';
+    }
+    function applyPanel(persist) {
+        const c = readPanel();
+        applyCfg(c);
+        if (persist) {
+            localStorage.setItem(CFG_KEY, JSON.stringify(c));
+            document.getElementById('dev-msg').textContent = 'Сохранено на этом устройстве!';
+            setTimeout(closeDev, 1200);
+        } else {
+            closeDev();
+        }
+    }
+    function applySaved() {
+        applyCfg(loadCfg());
+    }
+    function loadCfg() {
+        try {
+            const raw = localStorage.getItem(CFG_KEY);
+            if (!raw) return { ...DEFAULT_CFG };
+            return { ...DEFAULT_CFG, ...JSON.parse(raw) };
+        } catch (e) {
+            return { ...DEFAULT_CFG };
+        }
+    }
+    function saveCfg() { applyPanel(true); }
+    function showCfg() { applyPanel(false); }
+    function resetCfg() {
+        localStorage.removeItem(CFG_KEY);
+        applyCfg({ ...DEFAULT_CFG });
+        openPanel();
+        closeDev();
+    }
+    applySaved();
+</script>
+</body>
+</html>
