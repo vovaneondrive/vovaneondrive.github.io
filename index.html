@@ -640,6 +640,7 @@
         <span class="neon">NEON DRIVE</span> • бесплатное приложение для управления RC-машинкой • © 2026 by Владимир Попов
         <br><br>
         <button class="dev-btn" onclick="openDev()">⚙ Консоль разработчика</button>
+        <button class="dev-btn" onclick="openScare()">😱 ЖУТЬ</button>
     </footer>
 </div>
 
@@ -694,6 +695,61 @@
         </div>
     </div>
 </div>
+
+<div class="scare-mask" id="scare-mask" onclick="closeScare()">
+    <div class="scare-sticker" id="scare-sticker">👹</div>
+    <div class="scare-text">НАЖМИ ЧТОБЫ УБЕЖАТЬ</div>
+</div>
+
+<style>
+    .scare-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: radial-gradient(circle, #5a0000, #1a0000);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        overflow: hidden;
+    }
+    .scare-mask.show { display: flex; animation: scareFlash .35s steps(2) infinite; }
+    .scare-mask .scare-sticker {
+        font-size: clamp(120px, 30vw, 340px);
+        animation: scareShake .12s linear infinite;
+        filter: drop-shadow(0 0 40px #ff0044);
+        transform-origin: center;
+    }
+    .scare-mask .scare-text {
+        position: absolute;
+        bottom: 12%;
+        width: 100%;
+        text-align: center;
+        color: #ff0044;
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 4px;
+        text-shadow: 0 0 20px #ff0044;
+        animation: scareShake .15s linear infinite;
+    }
+    @keyframes scareShake {
+        0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+        25% { transform: translate(-4px, 3px) rotate(-2deg) scale(1.05); }
+        50% { transform: translate(4px, -3px) rotate(2deg) scale(0.97); }
+        75% { transform: translate(-3px, -4px) rotate(-1deg) scale(1.08); }
+        100% { transform: translate(3px, 4px) rotate(1deg) scale(1); }
+    }
+    @keyframes scareFlash {
+        0% { filter: brightness(1); }
+        100% { filter: brightness(1.6) saturate(1.8); }
+    }
+    body.scare-bg { animation: scareBg .25s steps(2) infinite; }
+    @keyframes scareBg {
+        0% { filter: none; }
+        100% { filter: invert(1) hue-rotate(180deg) contrast(1.3); }
+    }
+</style>
 
 <script>
     // FAQ toggle
@@ -911,6 +967,63 @@
         closeDev();
     }
     applySaved();
+
+    // 😱 Тролль-панель: страшные стикеры
+    const SCARE_STICKERS = ['👹','👻','💀','👺','😈','🧟','🐍','🕷️','🦇','👽'];
+    let scareAudio = null;
+    function openScare() {
+        const el = document.getElementById('scare-sticker');
+        el.textContent = SCARE_STICKERS[Math.floor(Math.random() * SCARE_STICKERS.length)];
+        document.getElementById('scare-mask').classList.add('show');
+        document.body.classList.add('scare-bg');
+        playScareSound();
+    }
+    function closeScare() {
+        document.getElementById('scare-mask').classList.remove('show');
+        document.body.classList.remove('scare-bg');
+        stopScareSound();
+    }
+    function playScareSound() {
+        try {
+            stopScareSound();
+            const AC = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AC();
+            const master = ctx.createGain();
+            master.gain.value = 0.6;
+            master.connect(ctx.destination);
+            const osc = ctx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(900, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.2);
+            const lfo = ctx.createOscillator();
+            lfo.frequency.value = 25;
+            const lfoGain = ctx.createGain();
+            lfoGain.gain.value = 250;
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc.frequency);
+            const noise = ctx.createBufferSource();
+            const buf = ctx.createBuffer(1, ctx.sampleRate * 1.2, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+            noise.buffer = buf;
+            const nFilter = ctx.createBiquadFilter();
+            nFilter.type = 'highpass';
+            nFilter.frequency.value = 800;
+            const nGain = ctx.createGain();
+            nGain.gain.value = 0.5;
+            noise.connect(nFilter); nFilter.connect(nGain); nGain.connect(master);
+            osc.connect(master);
+            osc.start();
+            lfo.start();
+            noise.start();
+            scareAudio = { ctx, osc, lfo, noise, nGain };
+            setTimeout(() => { try { if (scareAudio && scareAudio.ctx) scareAudio.ctx.close(); } catch (e) {} scareAudio = null; }, 1400);
+        } catch (e) { /* звук не обязателен */ }
+    }
+    function stopScareSound() {
+        try { if (scareAudio && scareAudio.ctx) { scareAudio.osc.stop(); scareAudio.lfo.stop(); scareAudio.noise.stop(); scareAudio.ctx.close(); } } catch (e) {}
+        scareAudio = null;
+    }
 </script>
 </body>
 </html>
