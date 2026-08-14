@@ -640,7 +640,6 @@
         <span class="neon">NEON DRIVE</span> • бесплатное приложение для управления RC-машинкой • © 2026 by Владимир Попов
         <br><br>
         <button class="dev-btn" onclick="openDev()">⚙ Консоль разработчика</button>
-        <button class="dev-btn scare-hidden" id="scare-btn" onclick="openScare()">😱 ЖУТЬ</button>
     </footer>
 </div>
 
@@ -688,6 +687,7 @@
 
         <p class="modal-err" id="dev-msg"></p>
         <div class="modal-btns">
+            <button class="btn btn-red" onclick="openScare()">😱 ЖУТЬ</button>
             <button class="btn" onclick="showCfg()">Показать</button>
             <button class="btn" onclick="saveCfg()">Сохранить</button>
             <button class="btn btn-red" onclick="resetCfg()">Сбросить</button>
@@ -879,7 +879,6 @@
     function tryDevPass() {
         if (document.getElementById('dev-pass').value === DEV_PASS) {
             document.getElementById('pass-mask').classList.remove('show');
-            document.getElementById('scare-btn').style.display = 'inline-block';
             openPanel();
         } else {
             document.getElementById('pass-err').textContent = 'Неверный пароль';
